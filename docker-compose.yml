@@ -1,0 +1,39 @@
+version: "2"
+services:
+  mysql-server:
+    image: mysql
+    restart: unless-stopped
+    healthcheck:
+      test: "exit 0"
+    environment:
+      MYSQL_DATABASE: database
+      MYSQL_USER: tester
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: test
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+  spring:
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+    build:
+      dockerfile: Dockerfile
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    container_name: spring
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-server:3306/database?autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: test
+    volumes:
+      - .m2:/root/.m2
+    stdin_open: true
+    tty: true
+volumes:
+  db_data: {}
+
+
+
